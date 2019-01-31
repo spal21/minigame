@@ -1,0 +1,130 @@
+<html>
+<head>
+<title>README.md</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.ln { color: #606366; font-weight: normal; font-style: normal; }
+.s0 { color: rgb(204,120,50); font-weight: bold; }
+.s1 { color: rgb(169,183,198); }
+.s2 { color: rgb(169,183,198); }
+</style>
+</head>
+<BODY BGCOLOR="#2b2b2b">
+<TABLE CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<TR><TD><CENTER>
+<FONT FACE="Arial, Helvetica" COLOR="#000000">
+README.md</FONT>
+</center></TD></TR></TABLE>
+<pre>
+<span class="s0">######</span><span class="s1">################ ScoreStore API </span><span class="s0">######################</span><span class="s2"> 
+ 
+</span><span class="s1">HTTP-based mini game back-end in Java which registers game scores for different users and levels, with the capability to return high score lists per level</span><span class="s2"> 
+ 
+ 
+</span><span class="s1">How to Run - Build - using maven - mvn clean package </span><span class="s2"> 
+ 
+</span><span class="s1">Launcher class - </span><span class="s2"> 
+</span><span class="s0">&gt;</span><span class="s1">com.king.services.scorestore.app.Launcher</span><span class="s2"> 
+ 
+</span><span class="s1">JavaDocs Generated - </span><span class="s2"> 
+</span><span class="s0">&gt;</span><span class="s1">http</span><span class="s2">:</span><span class="s1">//localhost</span><span class="s2">:</span><span class="s1">63342/minigame/target/apidocs/index.html</span><span class="s2"> 
+ 
+ 
+</span><span class="s1">API Details -</span><span class="s2"> 
+ 
+</span><span class="s0">1. </span><span class="s1">http</span><span class="s2">:</span><span class="s1">//localhost</span><span class="s2">:</span><span class="s1">8081/</span><span class="s2">&lt;'</span><span class="s1">LoginID</span><span class="s2">'&gt;</span><span class="s1">/login GET</span><span class="s2"> 
+</span><span class="s0">2. </span><span class="s1">http</span><span class="s2">:</span><span class="s1">//localhost</span><span class="s2">:</span><span class="s1">8081/</span><span class="s2">&lt;'</span><span class="s1">Level</span><span class="s2">'&gt;</span><span class="s1">/score?sessionkey=</span><span class="s2">&lt;'</span><span class="s1">SessionID</span><span class="s2">'&gt; </span><span class="s1">POST</span><span class="s2"> 
+    </span><span class="s1">Payload </span><span class="s2">&lt;'</span><span class="s1">Score</span><span class="s2">'&gt; 
+</span><span class="s0">3. </span><span class="s1">http</span><span class="s2">:</span><span class="s1">//localhost</span><span class="s2">:</span><span class="s1">8081/</span><span class="s2">&lt;'</span><span class="s1">Level</span><span class="s2">'&gt;</span><span class="s1">/highscorelist GET</span><span class="s2"> 
+ 
+ 
+</span><span class="s1">Technical Details -</span><span class="s2"> 
+ 
+</span><span class="s1">Technology Used- </span><span class="s2"> 
+</span><span class="s1">Development - Java 8</span><span class="s2"> 
+</span><span class="s1">Unit test - Junit,Mockito, </span><span class="s2"> 
+</span><span class="s1">Integration Test - ApacheHttpClient</span><span class="s2"> 
+</span><span class="s1">Build - Maven </span><span class="s2"> 
+ 
+</span><span class="s1">Model </span><span class="s2">: </span><span class="s1">User</span><span class="s2"> 
+ 
+</span><span class="s1">Architecture - N-layered </span><span class="s2"> 
+ 
+</span><span class="s1">DAO Layer, Service Layer, Service Interface</span><span class="s2">(</span><span class="s1">Controller</span><span class="s2">) </span><span class="s1">&amp; Processor for Async processing</span><span class="s2"> 
+ 
+</span><span class="s1">Implementation -</span><span class="s2"> 
+ 
+</span><span class="s1">DAO Layer - In-memory DAO implementation is done using ConcurrentHashMap.</span><span class="s2"> 
+ 
+</span><span class="s1">Services Layer - Facilitates the data to the controller</span><span class="s2"> 
+     
+</span><span class="s1">Service Interface</span><span class="s2">(</span><span class="s1">Controller</span><span class="s2">)</span><span class="s1">- Exposes REST interfaces</span><span class="s2"> 
+ 
+</span><span class="s1">Server - JDK Implementation of HttpServer</span><span class="s2"> 
+ 
+ 
+</span><span class="s1">Thoughts and Considerations - </span><span class="s2"> 
+ 
+</span><span class="s1">For Functional Requirements - </span><span class="s2"> 
+ 
+</span><span class="s1">Users and levels are created “ad-hoc”, the first time they are referenced.</span><span class="s2"> 
+ 
+</span><span class="s1">Login and Fetch HighestScore are sync call, where Login ID, Level and Score can take 31 bit unsigned Integer.</span><span class="s2"> 
+ 
+</span><span class="s1">Score Registration is implemented using Async Processing </span><span class="s2">(</span><span class="s1">since It doesn</span><span class="s2">'</span><span class="s1">t require to return anything </span><span class="s2">) </span><span class="s1">with In-Memory queue.</span><span class="s2"> 
+ 
+ 
+</span><span class="s1">FetchScore Handler</span><span class="s2"> 
+</span><span class="s0">&gt;</span><span class="s1">com.king.services.scorestore.handler.FetchHighScoreHttpHandler</span><span class="s2"> 
+</span><span class="s0"> * </span><span class="s1">Http Handler used for Fetching Highest Scores for a given level</span><span class="s2"> 
+</span><span class="s0"> * </span><span class="s1">Returns 200 for Successful fetch irrespective of Scores available for the given Level and Payload in comma separated format of LoginID=Score in Desc Order.The number of records to be returned is controlled with Constants.SCORE_LIST_FETCH_SIZE = 15 </span><span class="s2">(</span><span class="s1">Default</span><span class="s2">)</span><span class="s1">;</span><span class="s2">
+</span><span class="s0"> * </span><span class="s1">Returns 400 for Level Info  missing or not a 31 bit unsigned Int</span><span class="s2"> 
+</span><span class="s0"> * </span><span class="s1">Returns 500 for Exceptions from Service Layer or other Exceptions</span><span class="s2"> 
+ 
+</span><span class="s1">Login Handler</span><span class="s2"> 
+</span><span class="s0">&gt;</span><span class="s1">com.king.services.scorestore.handler.LoginHttpHandler</span><span class="s2"> 
+</span><span class="s0"> * </span><span class="s1">Http Handler used for Login Action</span><span class="s2"> 
+</span><span class="s0"> * </span><span class="s1">Returns 200 for Successful fetch along with Payload of SessionID . The sessionID is a random String whose length is controlled with Constants.SESSION_ID_LENGTH =7 </span><span class="s2">(</span><span class="s1">default</span><span class="s2">) 
+</span><span class="s0"> * </span><span class="s1">Returns 400 for Login ID  missing or not a 31 bit unsigned Int</span><span class="s2"> 
+</span><span class="s0"> * </span><span class="s1">Returns 500 for Exceptions from Service Layer or other Exceptions</span><span class="s2"> 
+ 
+</span><span class="s1">RegisterScoreHttpAsync Handler</span><span class="s2"> 
+</span><span class="s0">&gt;</span><span class="s1">com.king.services.scorestore.handler.RegisterScoreHttpAsyncHandler</span><span class="s2"> 
+</span><span class="s0"> * </span><span class="s1">Http Handler used for Registering Score in Async Mode</span><span class="s2"> 
+</span><span class="s0"> * </span><span class="s1">The Async processing is delegated to QueueProcessor Implementation.</span><span class="s2"> 
+</span><span class="s0"> * </span><span class="s1">Returns 200 for Successful Delegation of Score Registration. The cases of Expired SessionID are Handled in the AsyncProcessor</span><span class="s2"> 
+</span><span class="s0"> * </span><span class="s1">Returns 400 for SessionID missing , Level or Score Info missing or not a 31 bit unsigned Int</span><span class="s2"> 
+</span><span class="s0"> * </span><span class="s1">Returns 500 for other Exceptions</span><span class="s2"> 
+ 
+ 
+</span><span class="s1">DAO Implementation - </span><span class="s2"> 
+</span><span class="s0">&gt; </span><span class="s1">com.king.services.scorestore.dao.impl.InMemoryScoreStoreDAOImpl</span><span class="s2"> 
+</span><span class="s0"> * </span><span class="s1">Uses InMemory Implementation of DAO layer.</span><span class="s2"> 
+</span><span class="s0"> * </span><span class="s1">Uses Concurrent HashMap Implementation to persist Key Value pairs.</span><span class="s2"> 
+  
+ </span><span class="s1">Service Implementation -  </span><span class="s2"> 
+</span><span class="s0"> &gt; </span><span class="s1">com.king.services.scorestore.service.impl.ScoreStoreServiceImpl</span><span class="s2"> 
+</span><span class="s0"> * </span><span class="s1">Implementation of the Service Layer. Fetching Data is delegated to the DAO layer Implementation.</span><span class="s2"> 
+</span><span class="s0"> * </span><span class="s1">Uses Reentrant ReadWriteLock for Transaction control.</span><span class="s2"> 
+  
+ </span><span class="s1">AsyncProcessor Impl -</span><span class="s2"> 
+</span><span class="s0"> &gt;</span><span class="s1">com.king.services.scorestore.processor.impl.InMemoryQueueProcessorImpl</span><span class="s2"> 
+</span><span class="s0">  * </span><span class="s1">InMemory Implementation of the QueueProcessor for Async Processing of User Objects</span><span class="s2"> 
+   
+</span><span class="s0"> &gt;</span><span class="s1">com.king.services.scorestore.processor.impl.RegisterScoreQueueConsumerImpl</span><span class="s2"> 
+</span><span class="s0">  * </span><span class="s1">Queue Consumer Implementation for Async Processing for Registering Scores for a given Level and SessionID</span><span class="s2"> 
+</span><span class="s0">  * </span><span class="s1">Uses Fixed Thread Pool From Executor Service to processing in separate Thread. </span><span class="s2"> 
+  
+  
+</span><span class="s1">Application - </span><span class="s2"> 
+</span><span class="s0">&gt;</span><span class="s1">com.king.services.scorestore.app.Application</span><span class="s2"> 
+</span><span class="s0"> * </span><span class="s1">Main Application to Instantiate Http Server and register context paths</span><span class="s2"> 
+</span><span class="s0"> * </span><span class="s1">For starting and stopping the server gracefully</span><span class="s2"> 
+ 
+</span><span class="s1">Http Server Implementation - </span><span class="s2"> 
+</span><span class="s0">&gt;</span><span class="s1">com.king.services.scorestore.server</span><span class="s2"> 
+ 
+</span><span class="s1">Since in JDK Implementation, the Path Param values can only be processed if they are after a path fragment,</span><span class="s2"> 
+</span><span class="s1">a slight modification is done to the existing JDK implementation and the existing implementation is copied.</span></pre>
+</body>
+</html>
