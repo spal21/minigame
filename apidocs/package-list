@@ -1,0 +1,12 @@
+com.king.services.scorestore.app
+com.king.services.scorestore.dao
+com.king.services.scorestore.dao.impl
+com.king.services.scorestore.exception
+com.king.services.scorestore.handler
+com.king.services.scorestore.model
+com.king.services.scorestore.processor
+com.king.services.scorestore.processor.impl
+com.king.services.scorestore.server
+com.king.services.scorestore.service
+com.king.services.scorestore.service.impl
+com.king.services.scorestore.util
