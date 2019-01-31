@@ -13,10 +13,10 @@ JavaDocs Generated -
 
 API Details -
 
-1. http://localhost:8081/<LoginID>/login GET
-2. http://localhost:8081/<Level>/score?sessionkey=<SessionID> POST
-    Payload <Score>
-3. http://localhost:8081/<Level>/highscorelist GET
+1. http://localhost:8081/<'LoginID'>/login GET
+2. http://localhost:8081/<'Level'>/score?sessionkey=<'SessionID'> POST
+    Payload <'Score'>
+3. http://localhost:8081/<'Level'>/highscorelist GET
 
 
 Technical Details -
