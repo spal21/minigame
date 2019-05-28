@@ -9,11 +9,12 @@ package com.king.services.scorestore.model;
 public class Constants {
 
     public static final int SCORE_LIST_FETCH_SIZE = 15;
-    public static final int SESSION_ID_LENGTH =7;
-    public static final int SERVER_PORT = 8081;
+    public static final int SESSION_ID_LENGTH = 7;
+    public static final int SERVER_PORT = 8080;
     public static final int TEST_SERVER_PORT = 8090;
     public static final int SESSION_EXPIRATION_TIME_MINS = 10;
     public static final int QUEUE_CONSUMER_THREAD_POOL_SIZE = 1;
+    public static final int REGISTER_SCORE_RETRY_COUNT = 3;
     public static final String SLASH = "/";
     public static final String LOGIN_PATH = "login";
     public static final String HIGH_SCORE_LIST_PATH = "highscorelist";
@@ -27,6 +28,7 @@ public class Constants {
     public static final String LEVEL_NAN_ERROR_MESSAGE = "Level must be a number/unsigned integer.";
     public static final String PAYLOAD_REQUIRED_ERROR_MESSAGE = "Payload required.";
     public static final String SESSIONKEY_REQUIRED_ERROR_MESSAGE = "SessionKey Required.";
+    public static final String SESSIONKEY_INVALID = "Invalid SessionKey : ";
     public static final String SESSIONKEY_EXPIRED_ERROR_MESSAGE = "Session Expired.";
     public static final String LEVELS_SKIP_ERROR_MESSAGE = "User cannot skip levels. SessionID : ";
     public static final String LOGINID_OUT_OF_RANGE_ERROR_MESSAGE = "Login ID out of range. Permitted values 0 to 2147483647";

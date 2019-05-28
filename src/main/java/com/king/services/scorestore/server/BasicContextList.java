@@ -11,15 +11,15 @@ public class BasicContextList {
     BasicContextList() {
     }
 
-    public void add(BasicHttpContext context) {
+    public synchronized void add(BasicHttpContext context) {
         contextMap.put(context.getPath(), context);
     }
 
-    public int size() {
+    public synchronized int size() {
         return this.contextMap.size();
     }
 
-    public BasicHttpContext findContext(String path) {
+    public synchronized BasicHttpContext findContext(String path) {
         return this.contextMap.entrySet().stream().filter(e -> path.endsWith(e.getKey()) || e.getKey().equals(path)).map(e -> e.getValue()).findAny().get();
     }
 
@@ -33,7 +33,7 @@ public class BasicContextList {
         }
     }
 
-    public void remove(BasicHttpContext context) throws IllegalArgumentException {
+    public synchronized void remove(BasicHttpContext context) throws IllegalArgumentException {
         remove(context.getPath());
     }
 

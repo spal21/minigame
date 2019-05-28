@@ -91,7 +91,7 @@ DAO Implementation -
  
  AsyncProcessor Impl -
  >com.king.services.scorestore.processor.impl.InMemoryQueueProcessorImpl
-  * InMemory Implementation of the QueueProcessor for Async Processing of User Objects
+  * InMemory Implementation of the QueueProcessor for Async Processing of UserScore Objects
   
  >com.king.services.scorestore.processor.impl.RegisterScoreQueueConsumerImpl
   * Queue Consumer Implementation for Async Processing for Registering Scores for a given Level and SessionID
@@ -106,5 +106,17 @@ Application -
 Http Server Implementation - 
 >com.king.services.scorestore.server
 
-Since in JDK Implementation, the Path Param values can only be processed if they are after a path fragment,
-a slight modification is done to the existing JDK implementation and the existing implementation is copied.
+Since in JDK Implementation of sun.net.httpserver.HttpServer and  the existing implementation is copied. However, since the Path Param values can only be processed if they are after a path fragment,
+a slight modification is done to the existing JDK implementation.
+
+BasicContextList - ContextList
+updated the implementation 
+
+Modifications - 
+
+1. Updated models - in memory maps.
+2. User cannot connect from different devices i.e. can't have multiple sessionIDs for a given loginID. Multiple requests to create sessionID removes the existing ones first.
+3. Added Retry logic to async processing
+4. Used separate ReadWrite locks.
+5. Caching - precompute top 15 highest scores per level  
+6. THe existing implementation of Server was Single Threaded. Updated it to work with multiple threads. Used Threadpool. 

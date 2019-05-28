@@ -14,8 +14,8 @@ import java.util.logging.Logger;
 /**
  * Http Handler used for Fetching Highest Scores for a given level
  * Returns 200 for Successful fetch irrespective of Scores available for the given Level
- *              Payload in comma separated format of LoginID=Score in Desc Order
- *              The number of records to be returned is controlled with Constants.SCORE_LIST_FETCH_SIZE = 15 (Default);
+ * Payload in comma separated format of LoginID=Score in Desc Order
+ * The number of records to be returned is controlled with Constants.SCORE_LIST_FETCH_SIZE = 15 (Default);
  * Returns 400 for Level Info  missing or not a 31 bit unsigned Int
  * Returns 500 for Exceptions from Service Layer or other Exceptions
  */
@@ -35,7 +35,7 @@ public class FetchHighScoreHttpHandler implements HttpHandler {
             int level;
             baseHttpHandler.handle(httpExchange);
             Optional<String> levelOptional = Utils.extractPathParamValue(httpExchange, Constants.HIGH_SCORE_LIST_PATH);
-            if (!levelOptional.isPresent() || levelOptional.get().length()==0) {
+            if (!levelOptional.isPresent() || levelOptional.get().length() == 0) {
                 Utils.generateResponse(httpExchange, Constants.LEVEL_ID_MISSING_ERROR_MESSAGE, 400);
             } else if ((level = Integer.parseInt(levelOptional.get())) < 0 || !Utils.rangeCheck(level))
                 Utils.generateResponse(httpExchange, Constants.LEVEL_OUT_OF_RANGE_ERROR_MESSAGE, 400);

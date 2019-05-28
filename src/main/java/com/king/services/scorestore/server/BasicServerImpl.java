@@ -20,6 +20,8 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.*;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -111,9 +113,13 @@ class BasicServerImpl implements TimeSource {
     public void start() {
         if (this.bound && !this.started && !this.finished) {
             if (this.executor == null) {
-                this.executor = new BasicServerImpl.DefaultExecutor();
+                //this.executor = new BasicServerImpl.DefaultExecutor();
+                // TO convert from Single Threaded to multi threaded
+                this.executor = Executors.newFixedThreadPool(10);
             }
 
+            // ExecutorService service = Executors.newFixedThreadPool(2);
+            //service.submit(this.dispatcher);
             Thread thread = new Thread(this.dispatcher);
             this.started = true;
             thread.start();
@@ -588,6 +594,8 @@ class BasicServerImpl implements TimeSource {
 
     class Dispatcher implements Runnable {
         final LinkedList<BasicHttpConnection> connsToRegister = new LinkedList();
+
+        ExecutorService service = Executors.newFixedThreadPool(3);
 
         Dispatcher() {
         }

@@ -1,11 +1,12 @@
 package com.king.services.scorestore.processor.impl;
 
+import com.king.services.scorestore.exception.ServiceException;
 import com.king.services.scorestore.model.Constants;
-import com.king.services.scorestore.model.User;
+import com.king.services.scorestore.model.UserScoreDetails;
 import com.king.services.scorestore.processor.QueueConsumer;
 import com.king.services.scorestore.processor.QueueProcessor;
 import com.king.services.scorestore.service.ScoreStoreService;
-import com.king.services.scorestore.exception.ServiceException;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -20,7 +21,7 @@ import java.util.logging.Logger;
 public class RegisterScoreQueueConsumerImpl implements QueueConsumer {
 
     private static final Logger LOGGER = Logger.getLogger(RegisterScoreQueueConsumerImpl.class.getName());
-    private final QueueProcessor<User> queueProcessor;
+    private final QueueProcessor<UserScoreDetails> queueProcessor;
     private final ExecutorService executorService;
     private final ScoreStoreService scoreStoreService;
 
@@ -46,15 +47,33 @@ public class RegisterScoreQueueConsumerImpl implements QueueConsumer {
     }
 
     private void run() {
-        User user;
+        UserScoreDetails userScore;
         try {
             while (true) {
-                user = queueProcessor.take();
-                if (user != null) {
+                userScore = queueProcessor.take();
+                int retryCounter = 0;
+                if (userScore != null) {
                     try {
-                        scoreStoreService.registerScore(user.getSessionID(), user.getLevel(), user.getScore());
+
+                        scoreStoreService.registerScore(userScore.getSessionID(),
+                                userScore.getLevel(), userScore.getScore());
                     } catch (ServiceException e) {
-                        LOGGER.log(Level.SEVERE, "ServiceException Encountered in RegisterScoreQueueConsumerImpl run: ", e);
+                        LOGGER.log(Level.SEVERE, "ServiceException Encountered in RegisterScoreQueueConsumerImpl run .. Retrying: ", e);
+                        while (retryCounter < Constants.REGISTER_SCORE_RETRY_COUNT) {
+                            try {
+                                scoreStoreService.registerScore(userScore.getSessionID(),
+                                        userScore.getLevel(), userScore.getScore());
+                            } catch (ServiceException ex) {
+                                retryCounter++;
+                                LOGGER.log(Level.SEVERE, "ServiceException Encountered in RegisterScoreQueueConsumerImpl run .. on retry " +
+                                        ":  " + retryCounter + " of " + Constants.REGISTER_SCORE_RETRY_COUNT + " error: " + ex);
+                                if (retryCounter >= Constants.REGISTER_SCORE_RETRY_COUNT) {
+                                    LOGGER.log(Level.SEVERE, "ServiceException Encountered in RegisterScoreQueueConsumerImpl run .. Max retries " +
+                                            "exceeded error: " + ex);
+                                    break;
+                                }
+                            }
+                        }
                     }
                 }
             }

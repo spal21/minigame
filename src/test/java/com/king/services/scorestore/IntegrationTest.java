@@ -13,6 +13,7 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 
@@ -45,7 +46,7 @@ public class IntegrationTest {
     @Test
     public void testLoginAPI() throws IOException {
         CloseableHttpClient httpClient = HttpClients.createDefault();
-        HttpGet get = new HttpGet("http://127.0.0.1:8090/2310/login");
+        HttpGet get = new HttpGet("http://127.0.0.1:" + Constants.TEST_SERVER_PORT + "/2310/login");
         CloseableHttpResponse response = httpClient.execute(get);
         Assert.assertNotNull(response);
         Assert.assertNotNull(response.getStatusLine());
@@ -59,7 +60,7 @@ public class IntegrationTest {
     @Test
     public void testLoginAPIOutOfRange() throws IOException {
         CloseableHttpClient httpClient = HttpClients.createDefault();
-        HttpGet get = new HttpGet("http://127.0.0.1:8090/234423423443/login");
+        HttpGet get = new HttpGet("http://127.0.0.1:" + Constants.TEST_SERVER_PORT + "/234423423443/login");
         CloseableHttpResponse response = httpClient.execute(get);
         Assert.assertNotNull(response);
         Assert.assertNotNull(response.getStatusLine());
@@ -75,7 +76,7 @@ public class IntegrationTest {
     public void testRegisterScoreInvalidSessionKey() throws IOException {
         String sessionKey = "";
         CloseableHttpClient httpClient = HttpClients.createDefault();
-        HttpPost post = new HttpPost("http://127.0.0.1:8090/2/score?sessionkey=ABCEDF");
+        HttpPost post = new HttpPost("http://127.0.0.1:" + Constants.TEST_SERVER_PORT + "/2/score?sessionkey=ABCEDF");
         post.setEntity(new StringEntity("1200"));
         CloseableHttpResponse response = httpClient.execute(post);
         Assert.assertNotNull(response);
@@ -91,13 +92,13 @@ public class IntegrationTest {
     public void testRegisterScoreAllScenarios() throws IOException {
         String sessionKey = "";
         CloseableHttpClient httpClient = HttpClients.createDefault();
-        HttpGet get = new HttpGet("http://127.0.0.1:8090/2311/login");
+        HttpGet get = new HttpGet("http://127.0.0.1:" + Constants.TEST_SERVER_PORT + "/2311/login");
         CloseableHttpResponse response = httpClient.execute(get);
         sessionKey = Utils.processStream(response.getEntity().getContent());
 
 
         httpClient = HttpClients.createDefault();
-        HttpPost post = new HttpPost("http://127.0.0.1:8090/0/score?sessionkey=" + sessionKey);
+        HttpPost post = new HttpPost("http://127.0.0.1:" + Constants.TEST_SERVER_PORT + "/0/score?sessionkey=" + sessionKey);
         post.setEntity(new StringEntity("1200"));
         response = httpClient.execute(post);
         Assert.assertNotNull(response);
@@ -108,7 +109,7 @@ public class IntegrationTest {
         Assert.assertNotNull(body);
         Assert.assertEquals("", body);
 
-        post = new HttpPost("http://127.0.0.1:8090/1/score?sessionkey=");
+        post = new HttpPost("http://127.0.0.1:" + Constants.TEST_SERVER_PORT + "/1/score?sessionkey=");
         post.setEntity(new StringEntity("1200"));
         response = httpClient.execute(post);
         Assert.assertNotNull(response);
@@ -119,7 +120,7 @@ public class IntegrationTest {
         Assert.assertNotNull(body);
         Assert.assertEquals(Constants.SESSIONKEY_REQUIRED_ERROR_MESSAGE, body);
 
-        post = new HttpPost("http://127.0.0.1:8090/1/score?sessionkey=" + sessionKey);
+        post = new HttpPost("http://127.0.0.1:" + Constants.TEST_SERVER_PORT + "/1/score?sessionkey=" + sessionKey);
         response = httpClient.execute(post);
         Assert.assertNotNull(response);
         Assert.assertNotNull(response.getStatusLine());
@@ -129,7 +130,7 @@ public class IntegrationTest {
         Assert.assertNotNull(body);
         Assert.assertEquals(Constants.PAYLOAD_REQUIRED_ERROR_MESSAGE, body);
 
-        post = new HttpPost("http://127.0.0.1:8090/1/score?sessionkey=" + sessionKey);
+        post = new HttpPost("http://127.0.0.1:" + Constants.TEST_SERVER_PORT + "/1/score?sessionkey=" + sessionKey);
         post.setEntity(new StringEntity("1200"));
         response = httpClient.execute(post);
         Assert.assertNotNull(response);
@@ -146,12 +147,12 @@ public class IntegrationTest {
     public void testAllFunctionalRequirements() throws IOException {
         String sessionKey = "";
         CloseableHttpClient httpClient = HttpClients.createDefault();
-        HttpGet get = new HttpGet("http://127.0.0.1:8090/2312/login");
+        HttpGet get = new HttpGet("http://127.0.0.1:" + Constants.TEST_SERVER_PORT + "/2312/login");
         CloseableHttpResponse response = httpClient.execute(get);
         sessionKey = Utils.processStream(response.getEntity().getContent());
 
         httpClient = HttpClients.createDefault();
-        HttpPost post = new HttpPost("http://127.0.0.1:8090/2/score?sessionkey=" + sessionKey);
+        HttpPost post = new HttpPost("http://127.0.0.1:" + Constants.TEST_SERVER_PORT + "/2/score?sessionkey=" + sessionKey);
         post.setEntity(new StringEntity("1200"));
         response = httpClient.execute(post);
         Assert.assertNotNull(response);
@@ -163,7 +164,7 @@ public class IntegrationTest {
         Assert.assertEquals("", body);
 
         httpClient = HttpClients.createDefault();
-        post = new HttpPost("http://127.0.0.1:8090/0/score?sessionkey=" + sessionKey);
+        post = new HttpPost("http://127.0.0.1:" + Constants.TEST_SERVER_PORT + "/0/score?sessionkey=" + sessionKey);
         post.setEntity(new StringEntity("1200"));
         response = httpClient.execute(post);
         Assert.assertNotNull(response);
@@ -175,7 +176,7 @@ public class IntegrationTest {
         Assert.assertEquals("", body);
 
         httpClient = HttpClients.createDefault();
-        get = new HttpGet("http://localhost:8090/1/highscorelist");
+        get = new HttpGet("http://127.0.0.1:" + Constants.TEST_SERVER_PORT + "/1/highscorelist");
         response = httpClient.execute(get);
         Assert.assertNotNull(response);
         Assert.assertNotNull(response.getStatusLine());
@@ -184,7 +185,7 @@ public class IntegrationTest {
         Assert.assertEquals(0, body.length());
 
         httpClient = HttpClients.createDefault();
-        post = new HttpPost("http://127.0.0.1:8090/1/score?sessionkey=" + sessionKey);
+        post = new HttpPost("http://127.0.0.1:" + Constants.TEST_SERVER_PORT + "/1/score?sessionkey=" + sessionKey);
         post.setEntity(new StringEntity("1200"));
         response = httpClient.execute(post);
         Assert.assertNotNull(response);
@@ -196,7 +197,7 @@ public class IntegrationTest {
         Assert.assertEquals("", body);
 
         httpClient = HttpClients.createDefault();
-        get = new HttpGet("http://localhost:8090/1/highscorelist");
+        get = new HttpGet("http://127.0.0.1:" + Constants.TEST_SERVER_PORT + "/1/highscorelist");
         response = httpClient.execute(get);
         Assert.assertNotNull(response);
         Assert.assertNotNull(response.getStatusLine());

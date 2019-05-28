@@ -1,8 +1,9 @@
 package com.king.services.scorestore.dao.impl;
 
-import com.king.services.scorestore.exception.DAOException;
-import com.king.services.scorestore.model.User;
 import com.king.services.scorestore.dao.ScoreStoreDAO;
+import com.king.services.scorestore.exception.DAOException;
+import com.king.services.scorestore.model.UserScore;
+import com.king.services.scorestore.model.UserSession;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -14,87 +15,87 @@ import java.util.Set;
 public class InMemoryScoreStoreDAOImplTest {
 
     private static ScoreStoreDAO scoreStoreDAO;
-    private static Set<User> userSet;
+    private static Set<UserScore> userSet;
     private static long time;
 
     @BeforeClass
     public static void setup() throws DAOException {
         time = System.currentTimeMillis();
         scoreStoreDAO = new InMemoryScoreStoreDAOImpl();
-        scoreStoreDAO.saveSessionInfo("ABCDEF", 1);
-        scoreStoreDAO.saveLoginInfo(1, time);
-        scoreStoreDAO.saveUserInfoForLevel("ADJHD",1, 1234, 4322);
-        scoreStoreDAO.saveUserInfoForLevel("SDFSDF",1, 1234, 4321);
-        scoreStoreDAO.saveUserInfoForLevel("DSFDS",1, 1235, 4323);
+
+        UserSession us1 = new UserSession(1234, "ABCDEF", 12344456);
+        UserSession us2 = new UserSession(1235, "SDFSDF", 12344456);
+        scoreStoreDAO.persistUserSession(us1);
+        scoreStoreDAO.persistUserSession(us2);
+        scoreStoreDAO.persistUserScore(new UserScore(1234, 1, 4322, 1L));
+        scoreStoreDAO.persistUserScore(new UserScore(1235, 1, 4323, 1L));
         userSet = new HashSet<>();
-        User u1 = new User(1234, 4321, 1, "AVNHJ");
-        userSet.add(u1);
     }
 
     @Test
-    public void getUsersForLevel() throws DAOException {
-        scoreStoreDAO.saveUserInfoForLevel("HJBVJ",1, 1234, 4321);
-        Set<User> users = scoreStoreDAO.getUsersForLevel(1);
+    public void getUserScoresForLevel() throws DAOException {
+        UserSession us1 = new UserSession(1236, "HJBVJ", System.currentTimeMillis());
+        scoreStoreDAO.persistUserScore(new UserScore(1236, 1, 4321, System.currentTimeMillis()));
+        scoreStoreDAO.persistUserScore(new UserScore(1236, 1, 4322, System.currentTimeMillis()));
+        Set<UserScore> users = scoreStoreDAO.getUserScoresForLevel(1236,1);
         Assert.assertNotNull(users);
-        Assert.assertTrue(users.size() > 0);
+        Assert.assertTrue(users.size() == 2);
     }
 
     @Test
-    public void getTopNUsersForLevelDescOrder() throws DAOException {
-        final Optional<String> nUsersForLevel = scoreStoreDAO.getTopNScoresForLevelDesc(1, 10);
-        Assert.assertNotNull(nUsersForLevel);
-        Assert.assertTrue(nUsersForLevel.isPresent());
-        Assert.assertEquals("1235=4323,1234=4322", nUsersForLevel.get());
+    public void getUser() throws DAOException {
+        final Optional<UserSession> userOptional = scoreStoreDAO.getUserSession(1234);
+        Assert.assertNotNull(userOptional);
+        Assert.assertTrue(userOptional.isPresent());
+        Assert.assertNotNull(userOptional.get());
+        Assert.assertNotNull(userOptional.get().getLoginId());
+        Assert.assertNotNull(userOptional.get().getSessionID());
+        Assert.assertEquals(1234, userOptional.get().getLoginId());
+        Assert.assertEquals("ABCDEF", userOptional.get().getSessionID());
     }
 
     @Test
-    public void getTopNUsersForLevelDescOrderSingleRecord() throws DAOException {
-        final Optional<String> nUsersForLevel = scoreStoreDAO.getTopNScoresForLevelDesc(1, 1);
-        Assert.assertNotNull(nUsersForLevel);
-        Assert.assertTrue(nUsersForLevel.isPresent());
-        Assert.assertEquals("1235=4323", nUsersForLevel.get());
-    }
-
-    @Test
-    public void getSessionID() throws DAOException {
-        final Optional<String> sessionID = scoreStoreDAO.getSessionID(1);
-        Assert.assertNotNull(sessionID);
-        Assert.assertTrue(sessionID.isPresent());
-        Assert.assertEquals("ABCDEF", sessionID.get());
-    }
-
-    @Test
-    public void getLoginID() throws DAOException {
-        final Optional<Integer> loginID = scoreStoreDAO.getLoginID("ABCDEF");
-        Assert.assertNotNull(loginID);
-        Assert.assertTrue(loginID.isPresent());
-        Assert.assertEquals(1L, loginID.get().longValue());
-    }
-
-    @Test
-    public void getLoginInfo() throws DAOException {
-        final Optional<Long> loginTime = scoreStoreDAO.getLoginInfo(1);
-        Assert.assertNotNull(loginTime);
-        Assert.assertTrue(loginTime.isPresent());
-        Assert.assertEquals(time, loginTime.get().longValue());
+    public void getUserBySessionID() throws DAOException {
+        final Optional<UserSession> userOptional = scoreStoreDAO.getUserSession("ABCDEF");
+        Assert.assertNotNull(userOptional);
+        Assert.assertTrue(userOptional.isPresent());
+        Assert.assertNotNull(userOptional.get());
+        Assert.assertNotNull(userOptional.get().getLoginId());
+        Assert.assertNotNull(userOptional.get().getSessionID());
+        Assert.assertEquals(1234, userOptional.get().getLoginId());
+        Assert.assertEquals("ABCDEF", userOptional.get().getSessionID());
     }
 
     @Test
     public void removeSessionID() throws DAOException {
-        scoreStoreDAO.removeSessionID("ABCDEF");
-        final Optional<String> sessionID = scoreStoreDAO.getSessionID(1);
-        Assert.assertNotNull(sessionID);
-        Assert.assertFalse(sessionID.isPresent());
-        scoreStoreDAO.saveSessionInfo("ABCDEF", 1);
+        scoreStoreDAO.removeUserSession("ABCDEF");
+        final Optional<UserSession> optionalUserSession = scoreStoreDAO.getUserSession(1234);
+        Assert.assertNotNull(optionalUserSession);
+        Assert.assertFalse(optionalUserSession.isPresent());
+        UserSession us1 = new UserSession(1234, "ABCDEF", 12344456);
+        scoreStoreDAO.persistUserSession(us1);
+        scoreStoreDAO.persistUserScore(new UserScore(1234, 1, 4322, 1L));
     }
 
     @Test
     public void userExistsForLevel() throws DAOException {
-
-        boolean userExistsForLevel = scoreStoreDAO.userExistsForLevel(1, 1234);
-        Assert.assertTrue(userExistsForLevel);
-        userExistsForLevel = scoreStoreDAO.userExistsForLevel(1, 123);
-        Assert.assertFalse(userExistsForLevel);
+        Set<UserScore> userExistsForLevel = scoreStoreDAO.getUserScoresForLevel(1234, 1);
+        Assert.assertTrue(userExistsForLevel.size()>0);
+        userExistsForLevel = scoreStoreDAO.getUserScoresForLevel(2, 123);
+        Assert.assertFalse(userExistsForLevel.size()>0);
     }
 
+    @Test
+    public void getTopNUsersForLevelDescOrder() throws DAOException {
+        final Set<UserScore> nUsersForLevel = scoreStoreDAO.getTopNUserScoresForLevel(1, 15);
+        Assert.assertNotNull(nUsersForLevel);
+        Assert.assertTrue(nUsersForLevel.size() > 0);
+    }
+
+    @Test
+    public void getTopNUsersForLevelDescOrderSingleRecord() throws DAOException {
+        final Set<UserScore> nUsersForLevel = scoreStoreDAO.getTopNUserScoresForLevel(1, 15);
+        Assert.assertNotNull(nUsersForLevel);
+        Assert.assertTrue(nUsersForLevel.size() > 0);
+    }
 }

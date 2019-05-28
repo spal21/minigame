@@ -6,7 +6,6 @@ import com.sun.net.httpserver.HttpHandler;
 
 /**
  * Default Http Handler for health check of Http Server
- *
  */
 public class DefaultHandler implements HttpHandler {
 

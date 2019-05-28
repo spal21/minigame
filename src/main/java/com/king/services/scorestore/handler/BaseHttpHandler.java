@@ -3,12 +3,12 @@ package com.king.services.scorestore.handler;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+
 import java.net.URI;
 import java.util.logging.Logger;
 
 /**
  * Base Http Handler to print the Http Request
- *
  */
 public class BaseHttpHandler implements HttpHandler {
 

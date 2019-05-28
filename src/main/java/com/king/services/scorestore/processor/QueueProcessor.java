@@ -2,6 +2,7 @@ package com.king.services.scorestore.processor;
 
 /**
  * Handles Queue Processing Responsibilities
+ *
  * @param <T>
  */
 public interface QueueProcessor<T> {

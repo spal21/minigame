@@ -14,7 +14,7 @@ import java.util.logging.Logger;
 /**
  * Http Handler used for Login Action
  * Returns 200 for Successful fetch along with Payload of SessionID
- *              The sessionID is a random String whose length is controlled with Constants.SESSION_ID_LENGTH =7 (default)
+ * The sessionID is a random String whose length is controlled with Constants.SESSION_ID_LENGTH =7 (default)
  * Returns 400 for Login ID  missing or not a 31 bit unsigned Int
  * Returns 500 for Excpetions from Service Layer or other Exceptions
  */
@@ -40,7 +40,7 @@ public class LoginHttpHandler implements HttpHandler {
             Optional<String> sessionIDOptional = scoreStoreService.generateSessionID(loginId);
             if (sessionIDOptional.isPresent()) {
                 Utils.generateResponse(httpExchange, (sessionIDOptional.get()), 200);
-            }else{
+            } else {
                 Utils.generateResponse(httpExchange, Constants.GENERAL_ERROR_MESSAGE, 500);
             }
         } catch (NumberFormatException e) {

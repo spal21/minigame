@@ -1,8 +1,9 @@
 package com.king.services.scorestore.dao.impl;
 
-import com.king.services.scorestore.exception.DAOException;
-import com.king.services.scorestore.model.User;
 import com.king.services.scorestore.dao.ScoreStoreDAO;
+import com.king.services.scorestore.exception.DAOException;
+import com.king.services.scorestore.model.UserScore;
+import com.king.services.scorestore.model.UserSession;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -14,45 +15,41 @@ import java.util.stream.Collectors;
 /**
  * InMemory Implementation of DAO layer.
  * Uses Concurrent HashMap Implementation to persist Key Value pairs.
- *
  */
 public class InMemoryScoreStoreDAOImpl implements ScoreStoreDAO {
 
     private static final Logger LOGGER = Logger.getLogger(InMemoryScoreStoreDAOImpl.class.getName());
-    private final ConcurrentMap<Integer, Set<User>> levelUserMap;
-    private final ConcurrentMap<Integer, Long> userLoginMap;
-    private final ConcurrentMap<String, Integer> sessionUserMap;
+    /**
+     * Map to store level and collection of UserScores
+     */
+    private final ConcurrentMap<Integer, Set<UserScore>> levelUserScoreMap;
+    /**
+     * Map to store loginID and UserSession
+     */
+    private final ConcurrentMap<Integer, UserSession> userSessionMap;
 
     public InMemoryScoreStoreDAOImpl() {
-        levelUserMap = new ConcurrentHashMap<>();
-        userLoginMap = new ConcurrentHashMap<>();
-        sessionUserMap = new ConcurrentHashMap<>();
+        levelUserScoreMap = new ConcurrentHashMap<>();
+        userSessionMap = new ConcurrentHashMap<>();
     }
 
 
     @Override
-    public Set<User> getUsersForLevel(int level) throws DAOException {
+    public Set<UserScore> getUserScoresForLevel(int loginID, int level) throws DAOException {
         try {
-            return levelUserMap.get(level);
+            return levelUserScoreMap.getOrDefault(level, Collections.emptySet()).stream().
+                    filter( u -> u.getLoginID() == loginID && u.getLevel() == level).
+                    collect(Collectors.toSet());
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Exception encountered in getUsersForLevel :", e);
-            throw new DAOException("Exception encountered in getUsersForLevel : ", e);
+            LOGGER.log(Level.SEVERE, "Exception encountered in getUserScoresForLevel :", e);
+            throw new DAOException("Exception encountered in getUserScoresForLevel : ", e);
         }
     }
 
     @Override
-    public Optional<String> getTopNScoresForLevelDesc(int level, int num) throws DAOException {
+    public Set<UserScore> getTopNUserScoresForLevel(int level, int num) throws DAOException {
         try {
-            Set<User> users;
-            if ((users = levelUserMap.getOrDefault(level, Collections.emptySet())).size() > 0) {
-                return Optional.of(users.stream().sorted(Comparator.comparingInt(User::getScore)).
-                        collect(Collectors.toMap(User::getLoginId, User::getScore, (integer, integer2) ->
-                                Math.max(integer, integer2))).entrySet().stream().sorted(Map.Entry.
-                        comparingByValue(Comparator.reverseOrder())).map((e) -> e.getKey() + "=" + e.getValue()).
-                        limit(num).collect(Collectors.joining(",")));
-
-            }
-            return Optional.empty();
+            return levelUserScoreMap.getOrDefault(level, Collections.emptySet());
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Exception encountered in getTopNScoresForLevelDesc : :", e);
             throw new DAOException("Exception encountered in getTopNScoresForLevelDesc : ", e);
@@ -60,85 +57,74 @@ public class InMemoryScoreStoreDAOImpl implements ScoreStoreDAO {
     }
 
     @Override
-    public Optional<String> getSessionID(int loginID) throws DAOException {
+    public Optional<UserSession> getUserSession(int loginID) throws DAOException {
         try {
-            return sessionUserMap.entrySet().stream().filter(entry -> (loginID == entry.getValue())).
-                    map(e -> e.getKey()).findAny();
+            return Optional.ofNullable(userSessionMap.get(loginID));
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Exception encountered in getSessionID : :", e);
-            throw new DAOException("Exception encountered in getSessionID : ", e);
+            LOGGER.log(Level.SEVERE, "Exception encountered in getUserSession by LoginID :", e);
+            throw new DAOException("Exception encountered in getUserSession by LoginID :", e);
         }
     }
 
     @Override
-    public Optional<Integer> getLoginID(String sessionID) throws DAOException {
+    public Optional<UserSession> getUserSession(String sessionID) throws DAOException {
         try {
-            return Optional.ofNullable(sessionUserMap.get(sessionID));
+            return retrieveUserSession(sessionID);
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Exception encountered in getLoginID : :", e);
-            throw new DAOException("Exception encountered in getLoginID : ", e);
+            LOGGER.log(Level.SEVERE, "Exception encountered in getUserSession by SessionID :", e);
+            throw new DAOException("Exception encountered in getUserSession by SessionID :", e);
         }
     }
 
     @Override
-    public void saveSessionInfo(String sessionID, int loginID) throws DAOException {
+    public Optional<UserSession> persistUserSession(UserSession userSession) throws DAOException {
+        UserSession session = null;
         try {
-            sessionUserMap.put(sessionID, loginID);
+
+            userSessionMap.put(userSession.getLoginId(), session = new UserSession(userSession.getLoginId(),
+                    userSession.getSessionID(), new Date().getTime()));
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Exception encountered in saveSessionInfo : :", e);
-            throw new DAOException("Exception encountered in saveSessionInfo : ", e);
+            LOGGER.log(Level.SEVERE, "Exception encountered in persistUserSession :", e);
+            throw new DAOException("Exception encountered in persistUserSession :", e);
+        }
+        return Optional.ofNullable(session);
+    }
+
+    @Override
+    public void removeUserSession(String sessionID) throws DAOException {
+        try {
+            Optional<UserSession> userSessionOptional = retrieveUserSession(sessionID);
+            if(userSessionOptional.isPresent()){
+                if (Objects.nonNull(userSessionOptional))
+                    userSessionMap.remove(userSessionOptional.get().getLoginId());
+            }
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Exception encountered in removeUserSession :", e);
+            throw new DAOException("Exception encountered in removeUserSession :", e);
         }
     }
 
     @Override
-    public void saveLoginInfo(int loginID, long time) throws DAOException {
+    public void persistUserScore(UserScore userScore) throws DAOException {
         try {
-            userLoginMap.put(loginID, time);
+
+            levelUserScoreMap.computeIfAbsent(userScore.getLevel(), k -> new HashSet()).add(userScore);
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Exception encountered in saveLoginInfo : :", e);
-            throw new DAOException("Exception encountered in saveLoginInfo : ", e);
+            LOGGER.log(Level.SEVERE, "Exception encountered in persistUserScore :", e);
+            throw new DAOException("Exception encountered in persistUserScore :", e);
         }
     }
 
-    @Override
-    public Optional<Long> getLoginInfo(int loginID) throws DAOException {
-        try {
-            return Optional.of(userLoginMap.get(loginID));
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Exception encountered in getLoginInfo : :", e);
-            throw new DAOException("Exception encountered in getLoginInfo : ", e);
+    private Optional<UserSession> retrieveUserSession(String sessionID) {
+        final Map<Integer, UserSession> userSessionMap = this.userSessionMap;
+        Optional<Map.Entry<Integer, UserSession>> userOptional = userSessionMap.entrySet().stream().filter(entry ->
+                (sessionID.equals(entry.getValue().getSessionID()))).findFirst();
+        if(userOptional.isPresent()){
+            return Optional.ofNullable(userOptional.get().getValue());
+        }else{
+            return Optional.empty();
         }
-    }
 
-    @Override
-    public void removeSessionID(String sessionID) throws DAOException {
-        try {
-            sessionUserMap.remove(sessionID);
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Exception encountered in removeSessionID : :", e);
-            throw new DAOException("Exception encountered in removeSessionID : ", e);
-        }
-    }
 
-    @Override
-    public boolean userExistsForLevel(int level, int loginID) throws DAOException {
-        try {
-            return levelUserMap.computeIfAbsent(level, k -> new HashSet<User>()).stream().
-                    anyMatch(u -> (loginID == u.getLoginId() && level == u.getLevel()));
-
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Exception encountered in userExistsForLevel : :", e);
-            throw new DAOException("Exception encountered in userExistsForLevel : ", e);
-        }
-    }
-
-    @Override
-    public void saveUserInfoForLevel(String sessionID, int level, int loginID, int score) throws DAOException {
-        try {
-            levelUserMap.computeIfAbsent(level, k -> new HashSet()).add(new User(loginID, score, level, sessionID));
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Exception encountered in saveUserInfoForLevel : :", e);
-            throw new DAOException("Exception encountered in saveUserInfoForLevel : ", e);
-        }
     }
 }

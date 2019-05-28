@@ -1,25 +1,25 @@
 package com.king.services.scorestore.app;
 
-import com.king.services.scorestore.handler.DefaultHandler;
-import com.king.services.scorestore.handler.FetchHighScoreHttpHandler;
-import com.king.services.scorestore.handler.LoginHttpHandler;
-import com.king.services.scorestore.handler.RegisterScoreHttpAsyncHandler;
-import com.king.services.scorestore.server.Code;
+import com.king.services.scorestore.cache.ObjectCache;
+import com.king.services.scorestore.cache.impl.UserScoreCache;
 import com.king.services.scorestore.dao.ScoreStoreDAO;
 import com.king.services.scorestore.dao.impl.InMemoryScoreStoreDAOImpl;
 import com.king.services.scorestore.handler.*;
 import com.king.services.scorestore.model.Constants;
+import com.king.services.scorestore.model.UserScore;
 import com.king.services.scorestore.processor.QueueConsumer;
 import com.king.services.scorestore.processor.QueueProcessor;
 import com.king.services.scorestore.processor.impl.InMemoryQueueProcessorImpl;
 import com.king.services.scorestore.processor.impl.RegisterScoreQueueConsumerImpl;
 import com.king.services.scorestore.server.BasicHttpServerProvider;
+import com.king.services.scorestore.server.Code;
 import com.king.services.scorestore.service.ScoreStoreService;
 import com.king.services.scorestore.service.impl.ScoreStoreServiceImpl;
 import com.sun.net.httpserver.HttpServer;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.List;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -50,14 +50,17 @@ public class Application {
             QueueProcessor queueProcessor = getQueueProcessor();
 
             ScoreStoreDAO scoreStoreDAO = getScoreStoreDAO();
-            ScoreStoreService scoreStoreService = getScoreStoreService(scoreStoreDAO);
+            final ObjectCache<Integer, List<UserScore>> userScoreCache = getUserScoreCache();
+            ScoreStoreService scoreStoreService = getScoreStoreService(scoreStoreDAO, userScoreCache);
             BaseHttpHandler baseHttpHandler = getBaseHttpHandler();
+
+            //Register Paths
             server.createContext(Constants.SLASH, getDefaultHttpHandler());
             server.createContext(Constants.SLASH + Code.PATH_PARAM + Constants.SLASH + Constants.LOGIN_PATH,
                     getLoginHttpHandler(baseHttpHandler, scoreStoreService));
             server.createContext(Constants.SLASH + Code.PATH_PARAM + Constants.SLASH + Constants.SCORE_PATH,
                     //getRegisterScoreHttpSyncHandler(baseHttpHandler, scoreStoreService));
-                    getRegisterScoreHttpAsyncHandler(baseHttpHandler, queueProcessor));
+                    getRegisterScoreHttpAsyncHandler(baseHttpHandler, queueProcessor, scoreStoreService));
             server.createContext(Constants.SLASH + Code.PATH_PARAM + Constants.SLASH + Constants.HIGH_SCORE_LIST_PATH,
                     getFetchHighScoreHttpHandler(baseHttpHandler, scoreStoreService));
 
@@ -78,9 +81,14 @@ public class Application {
         return new InMemoryScoreStoreDAOImpl();
     }
 
-    private ScoreStoreService getScoreStoreService(ScoreStoreDAO scoreStoreDAO) {
+    private ObjectCache<Integer, List<UserScore>> getUserScoreCache() {
+        LOGGER.info("Instiating UserScoreCache");
+        return new UserScoreCache();
+    }
+
+    private ScoreStoreService getScoreStoreService(ScoreStoreDAO scoreStoreDAO, ObjectCache<Integer, List<UserScore>> cache) {
         LOGGER.info("Creating ScoreStoreService Bean");
-        return new ScoreStoreServiceImpl(scoreStoreDAO);
+        return new ScoreStoreServiceImpl(scoreStoreDAO, cache);
     }
 
     private BaseHttpHandler getBaseHttpHandler() {
@@ -105,9 +113,9 @@ public class Application {
     }
 
     private RegisterScoreHttpAsyncHandler getRegisterScoreHttpAsyncHandler(BaseHttpHandler baseHttpHandler,
-                                                                           QueueProcessor queueProcessor) {
+                                                                           QueueProcessor queueProcessor, ScoreStoreService scoreStoreService) {
         LOGGER.info("Creating RegisterScoreHttpAsyncHandler Bean");
-        return new RegisterScoreHttpAsyncHandler(baseHttpHandler, queueProcessor);
+        return new RegisterScoreHttpAsyncHandler(baseHttpHandler, queueProcessor, scoreStoreService);
     }
 
     private QueueProcessor getQueueProcessor() {
@@ -128,7 +136,7 @@ public class Application {
         try {
             httpServer = provider.createHttpServer(new InetSocketAddress(port));
         } catch (IOException e) {
-            LOGGER.log(Level.SEVERE,"IOException encountered in instantiateHttpServer Bean : " + e);
+            LOGGER.log(Level.SEVERE, "IOException encountered in instantiateHttpServer Bean : " + e);
         }
         return httpServer;
     }
